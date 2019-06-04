@@ -273,8 +273,8 @@ def gen_chile_data():
     return X_train_onehot, X_train_numpy, cat_vector
 
 
-# @title Load data from file or generate it again
-dataset_name = 'schufa'
+# Load data from file or generate it again
+dataset_name = 'sqf'
 
 datasets = {'sqf': gen_sqf16_data,
             'cmp': gen_compas_data,
@@ -284,7 +284,7 @@ datasets = {'sqf': gen_sqf16_data,
 
 X_train_onehot, X_train_numpy, cat_vector = datasets[dataset_name]()
 
-load_from_file = True  # @param {type:"boolean"}
+load_from_file = True  
 
 work_dir_ = os.path.join(
     'C:/Users/Elias/Desktop/UnfairGAN Stuff/', dataset_name)
@@ -506,10 +506,10 @@ class CV_pred_protected():
                 tpr_imp_miss = []
                 auc_imp_miss = []
                 if(i == 1):
-                    samp_cols = data_x_o.columns.to_series().sample(
-                        np.int8(len(data_x_o.columns)*i+.5))
-                    data_miss = [data_g[0][samp_cols], data_r[1]
-                        [samp_cols], data_g[2], data_r[3]]
+                    # samp_cols = data_x_o.columns.to_series().sample(
+                    #     np.int8(len(data_x_o.columns)*i+.5))
+                    data_miss = [data_g[0], data_r[1]
+                        , data_g[2], data_r[3]]
                     fpr_, tpr_, roc_auc_ = self.get_cfm_auc(data_miss, v)
                     fpr_miss.append(fpr_)
                     tpr_miss.append(tpr_)
@@ -565,85 +565,97 @@ class CV_pred_protected():
             self.eval_dict[k] = [fpr, tpr,roc_auc]
 
     # wilcoxon test for auc:
-    def wilcox_eval(self, key,mod):
-        print(key)
+    def wilcox_eval(self, key,mod,f):
+        print(key,file=f)
         models = ['logit', 'rf']
         auc = self.eval_dict[key][2]
-        print('model: ', models[mod])
+        print('model: ', models[mod],file=f)
         v = self.dict[key]
         cnt = 0
         for i in range(len(v)):
-            print(v[i])
+            print(v[i],file=f)
 
             wc_r_gr = stat.wilcoxon([auc[cv][0][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][2][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
             wc_r_g = stat.wilcoxon([auc[cv][0][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][1][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
             wc_g_gr = stat.wilcoxon([auc[cv][1][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][2][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
 
             for wc, n in zip([wc_r_g,wc_r_gr,wc_g_gr],['wc_r_g','wc_r_gr','wc_g_gr']):
-                print(n)
+                print(n,file=f)
                 if(wc[0] >5 and wc[1]<0.05):
-                    print(wc)
+                    print(wc,file=f)
                     print(
-                        'H0 rejected, difference does not have a distribution with mean 0')
+                        'H0 rejected, difference does not have a distribution with mean 0',file=f)
                 elif(wc[1] >.05):
-                    print(wc)
-                    print('not statistically significant')
+                    print(wc,file=f)
+                    print('not statistically significant',file=f)
                 else:
-                    print(wc)
-                    print('Cannot reject H0')
+                    print(wc,file=f)
+                    print('Cannot reject H0',file=f)
                 # return wc_1,wc_2
 
-    def _print_rates(self, fpr,tpr,auc):
-        print('Mean False positive rate', fpr)
-        print('Mean True positive rate', tpr)
-        print('Mean AUC', auc)  
+    def _print_rates(self, fpr,tpr,auc,file):
+        print('Mean False positive rate', fpr,'Mean True positive rate', tpr,'Mean AUC', auc,file=file) 
 
     def summary(self):
-        print('Mean AUC+Confusion matrix for logit, rf using (real,gen,gr):')
+        f = open(os.path.join(work_dir_,'prot_ev_summary.txt'),'w')
+        print('Mean AUC+Confusion matrix for logit, rf using (real,gen,gr):',file=f)
         models = ['glm', 'rf']
-        data_n = ['real', 'gen','train_gen_predict_real']
+        data_n = ['real', 'gen','train_gen_predict_real',
+        'data_gr_90','data_comb_90_0.5','data_comb_90_0.3','data_comb_90_0.1',
+        'data_gr_80','data_comb_80_0.5','data_comb_80_0.3','data_comb_80_0.1',
+        'data_gr_70','data_comb_70_0.5','data_comb_70_0.3','data_comb_70_0.1',
+        'data_gr_60','data_comb_60_0.5','data_comb_60_0.3','data_comb_60_0.1',
+        'data_gr_50','data_comb_50_0.5','data_comb_50_0.3','data_comb_50_0.1',
+        'data_gr_40','data_comb_40_0.5','data_comb_40_0.3','data_comb_40_0.1',
+        'data_gr_30','data_comb_30_0.5','data_comb_30_0.3','data_comb_30_0.1',
+        'data_gr_20','data_comb_20_0.5','data_comb_20_0.3','data_comb_20_0.1',
+        'data_gr_10','data_comb_10_0.5','data_comb_10_0.3','data_comb_10_0.1']
+
         for i in range(len(models)):
-            print(models[i], '\n---------------------------')
-            for j in range(len(data_n)):
-                print(data_n[j])
-                for k, v in self.eval_dict.items():
-                    print(k)
-                    fpr = v[0]
-                    tpr = v[1]
-                    roc_auc = v[2]
+            print(models[i], '\n---------------------------',file=f)
+            for k, v in self.eval_dict.items():
+                print(k,file=f)
+                fpr = v[0]
+                tpr = v[1]
+                roc_auc = v[2]
 
-                    if(len(self.dict[k]) >1):
-                        cnt = 0
-                        for l in self.dict[k]:
-
-                            print('Summary for', l,'...')
+                if(len(self.dict[k]) >1):
+                    cnt = 0
+                    for l in self.dict[k]:
+                        print('Summary for', l,'...',file=f)
+                        for j in range(len(data_n)):
+                            # print(data_n[j],file=f)    
                             mean_fpr = np.mean(
                                 [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                             mean_tpr = np.mean(
                                 [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                             mean_roc_auc = np.mean(
                                 [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                            self._print_rates(mean_fpr, mean_tpr,mean_roc_auc)
-                            cnt += 1
-                        print('micro average?')
+                            self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
+                        cnt += 1
+                    print('micro average?',file=f)
+                    for j in range(len(data_n)):
+                        # print(data_n[j],file=f)    
                         mean_fpr = np.mean(
                             [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                         mean_tpr = np.mean(
                             [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                         mean_roc_auc = np.mean(
                             [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                        self._print_rates(mean_fpr, mean_tpr,mean_roc_auc)
-                    else:
+                        self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
+                else:
+                    for j in range(len(data_n)):
+                        # print(data_n[j],file=f)    
                         mean_fpr = np.mean([fpr[cv][j][i]
-                                           for cv in range(self.n_splits)])
+                                            for cv in range(self.n_splits)])
                         mean_tpr = np.mean([tpr[cv][j][i]
-                                           for cv in range(self.n_splits)])
+                                            for cv in range(self.n_splits)])
                         mean_roc_auc = np.mean(
                             [roc_auc[cv][j][i] for cv in range(self.n_splits)])
-                        self._print_rates(mean_fpr, mean_tpr,mean_roc_auc)
+                        self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
 
             for key in self.eval_dict.keys():
-                self.wilcox_eval(key,i)
+                self.wilcox_eval(key,i,f)
 
 
 eval_orig_c = eval_orig.copy()
@@ -711,7 +723,111 @@ elif (dataset_name == 'sqf'):
 
     prot_dict = {'gender': g1,'ethnicity':r1,'age':ages}
 
-prot_ev = CV_pred_protected(eval_orig_c, eval_gen_c,prot_dict,dataset_name)
-prot_ev.evaluate(5)
-# prot_ev.summary()
-dill.dump(prot_ev, open(filepath_prot,'wb'))
+# SET THIS ONLY FOR THE PURPOSE OF REPLACING OLD FUNCTIONS OF PAST GENERATED RESULTS
+load_from_pkl = False
+
+if(not load_from_pkl):
+    prot_ev = CV_pred_protected(eval_orig_c, eval_gen_c,prot_dict,dataset_name)
+    prot_ev.evaluate(5)
+    prot_ev.summary()
+    dill.dump(prot_ev, open(filepath_prot,'wb'))
+
+def n_print_rates(self, fpr,tpr,auc,file):
+        print('Mean False positive rate', fpr,'Mean True positive rate', tpr,'Mean AUC', auc,file=file)
+
+def n_wilcox_eval(self, key,mod,f):
+    print(key,file=f)
+    models = ['logit', 'rf']
+    auc = self.eval_dict[key][2]
+    print('model: ', models[mod],file=f)
+    v = self.dict[key]
+    cnt = 0
+    for i in range(len(v)):
+        print(v[i],file=f)
+
+        wc_r_gr = stat.wilcoxon([auc[cv][0][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][2][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
+        wc_r_g = stat.wilcoxon([auc[cv][0][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][1][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
+        wc_g_gr = stat.wilcoxon([auc[cv][1][cnt+mod::len(models)][0] for cv in range(self.n_splits)], [auc[cv][2][cnt+mod::len(models)][0] for cv in range(self.n_splits)])
+
+        for wc, n in zip([wc_r_g,wc_r_gr,wc_g_gr],['wc_r_g','wc_r_gr','wc_g_gr']):
+            print(n,file=f)
+            if(wc[0] >5 and wc[1]<0.05):
+                print(wc,file=f)
+                print(
+                    'H0 rejected, difference does not have a distribution with mean 0',file=f)
+            elif(wc[1] >.05):
+                print(wc,file=f)
+                print('not statistically significant',file=f)
+            else:
+                print(wc,file=f)
+                print('Cannot reject H0',file=f)
+
+def new_summary(self):
+    f = open(os.path.join(work_dir_,'prot_ev_summary.txt'),'w')
+    print('Mean AUC+Confusion matrix for logit, rf using (real,gen,gr):',file=f)
+    models = ['glm', 'rf']
+    data_n = ['real', 'gen','train_gen_predict_real',
+    'data_gr_90','data_comb_90_0.5','data_comb_90_0.3','data_comb_90_0.1',
+    'data_gr_80','data_comb_80_0.5','data_comb_80_0.3','data_comb_80_0.1',
+    'data_gr_70','data_comb_70_0.5','data_comb_70_0.3','data_comb_70_0.1',
+    'data_gr_60','data_comb_60_0.5','data_comb_60_0.3','data_comb_60_0.1',
+    'data_gr_50','data_comb_50_0.5','data_comb_50_0.3','data_comb_50_0.1',
+    'data_gr_40','data_comb_40_0.5','data_comb_40_0.3','data_comb_40_0.1',
+    'data_gr_30','data_comb_30_0.5','data_comb_30_0.3','data_comb_30_0.1',
+    'data_gr_20','data_comb_20_0.5','data_comb_20_0.3','data_comb_20_0.1',
+    'data_gr_10','data_comb_10_0.5','data_comb_10_0.3','data_comb_10_0.1']
+
+    for i in range(len(models)):
+        print(models[i], '\n---------------------------',file=f)
+        for k, v in self.eval_dict.items():
+            print(k,file=f)
+            fpr = v[0]
+            tpr = v[1]
+            roc_auc = v[2]
+
+            if(len(self.dict[k]) >1):
+                cnt = 0
+                for l in self.dict[k]:
+                    print('Summary for', l,'...',file=f)
+                    for j in range(len(data_n)):
+                        # print(data_n[j],file=f)    
+                        mean_fpr = np.mean(
+                            [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                        mean_tpr = np.mean(
+                            [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                        mean_roc_auc = np.mean(
+                            [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                        self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
+                    cnt += 1
+                print('micro average?',file=f)
+                for j in range(len(data_n)):
+                    # print(data_n[j],file=f)    
+                    mean_fpr = np.mean(
+                        [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                    mean_tpr = np.mean(
+                        [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                    mean_roc_auc = np.mean(
+                        [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
+                    self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
+            else:
+                for j in range(len(data_n)):
+                    # print(data_n[j],file=f)    
+                    mean_fpr = np.mean([fpr[cv][j][i]
+                                        for cv in range(self.n_splits)])
+                    mean_tpr = np.mean([tpr[cv][j][i]
+                                        for cv in range(self.n_splits)])
+                    mean_roc_auc = np.mean(
+                        [roc_auc[cv][j][i] for cv in range(self.n_splits)])
+                    self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
+
+        for key in self.eval_dict.keys():
+            self.wilcox_eval(key,i,f)
+
+if(load_from_pkl):
+    prot_ev = dill.load(open(filepath_prot,'rb'))
+    import types  
+    prot_ev.summary = types.MethodType(new_summary, prot_ev)
+    prot_ev._print_rates = types.MethodType(n_print_rates,prot_ev)
+    prot_ev.wilcox_eval = types.MethodType(n_wilcox_eval,prot_ev)
+
+prot_ev.summary()
