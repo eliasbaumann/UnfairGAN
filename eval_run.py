@@ -237,7 +237,7 @@ def gen_schufa_data():
 
 def gen_chile_data():
     raw_chile = pd.read_csv(
-        'C:/Users/Elias/esktop/UnfairGAN Stuff/Chile_dataset', sep=";")
+        'C:/Users/Elias/Desktop/UnfairGAN Stuff/Chile_dataset/ADMISION2017_Refractored_replaced.csv', sep=";")
 
     # Prepare categorical columns
     cat_cols = ['Nationality [P008]',
@@ -274,7 +274,7 @@ def gen_chile_data():
 
 
 # Load data from file or generate it again
-dataset_name = 'sqf'
+dataset_name = 'chile'
 
 datasets = {'sqf': gen_sqf16_data,
             'cmp': gen_compas_data,
@@ -625,32 +625,32 @@ class CV_pred_protected():
                         print('Summary for', l,'...',file=f)
                         for j in range(len(data_n)):
                             # print(data_n[j],file=f)    
-                            mean_fpr = np.mean(
+                            mean_fpr = np.nanmean(
                                 [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                            mean_tpr = np.mean(
+                            mean_tpr = np.nanmean(
                                 [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                            mean_roc_auc = np.mean(
+                            mean_roc_auc = np.nanmean(
                                 [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                             self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
                         cnt += 1
                     print('micro average?',file=f)
                     for j in range(len(data_n)):
                         # print(data_n[j],file=f)    
-                        mean_fpr = np.mean(
+                        mean_fpr = np.nanmean(
                             [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                        mean_tpr = np.mean(
+                        mean_tpr = np.nanmean(
                             [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                        mean_roc_auc = np.mean(
+                        mean_roc_auc = np.nanmean(
                             [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                         self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
                 else:
                     for j in range(len(data_n)):
                         # print(data_n[j],file=f)    
-                        mean_fpr = np.mean([fpr[cv][j][i]
+                        mean_fpr = np.nanmean([fpr[cv][j][i]
                                             for cv in range(self.n_splits)])
-                        mean_tpr = np.mean([tpr[cv][j][i]
+                        mean_tpr = np.nanmean([tpr[cv][j][i]
                                             for cv in range(self.n_splits)])
-                        mean_roc_auc = np.mean(
+                        mean_roc_auc = np.nanmean(
                             [roc_auc[cv][j][i] for cv in range(self.n_splits)])
                         self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
 
@@ -694,8 +694,8 @@ elif (dataset_name == 'schufa'):
     prot_dict = {'gender/marriage': sexes,'age':ages}
 elif (dataset_name == 'chile'):
 
-    eval_gen.columns = [s.replace('[', '').replace(']', '') for s in eval_gen.columns]
-    eval_orig.columns = [s.replace('[', '').replace(']', '') for s in eval_orig.columns]
+    eval_gen_c.columns = [s.replace('[', '').replace(']', '') for s in eval_gen_c.columns]
+    eval_orig_c.columns = [s.replace('[', '').replace(']', '') for s in eval_orig_c.columns]
     n1 = ['Nationality P008_2']
 
     g1 = ['Gender P009_2']
@@ -791,32 +791,32 @@ def new_summary(self):
                     print('Summary for', l,'...',file=f)
                     for j in range(len(data_n)):
                         # print(data_n[j],file=f)    
-                        mean_fpr = np.mean(
+                        mean_fpr = np.nanmean(
                             [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                        mean_tpr = np.mean(
+                        mean_tpr = np.nanmean(
                             [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                        mean_roc_auc = np.mean(
+                        mean_roc_auc = np.nanmean(
                             [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                         self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
                     cnt += 1
                 print('micro average?',file=f)
                 for j in range(len(data_n)):
                     # print(data_n[j],file=f)    
-                    mean_fpr = np.mean(
+                    mean_fpr = np.nanmean(
                         [fpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                    mean_tpr = np.mean(
+                    mean_tpr = np.nanmean(
                         [tpr[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
-                    mean_roc_auc = np.mean(
+                    mean_roc_auc = np.nanmean(
                         [roc_auc[cv][j][cnt+i::len(models)] for cv in range(self.n_splits)])
                     self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
             else:
                 for j in range(len(data_n)):
                     # print(data_n[j],file=f)    
-                    mean_fpr = np.mean([fpr[cv][j][i]
+                    mean_fpr = np.nanmean([fpr[cv][j][i]
                                         for cv in range(self.n_splits)])
-                    mean_tpr = np.mean([tpr[cv][j][i]
+                    mean_tpr = np.nanmean([tpr[cv][j][i]
                                         for cv in range(self.n_splits)])
-                    mean_roc_auc = np.mean(
+                    mean_roc_auc = np.nanmean(
                         [roc_auc[cv][j][i] for cv in range(self.n_splits)])
                     self._print_rates(mean_fpr, mean_tpr,mean_roc_auc,f)
 

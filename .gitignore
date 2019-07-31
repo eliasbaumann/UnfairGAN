@@ -4,3 +4,5 @@ results eval.xlsx
 __pycache__/pairwise_external.cpython-36.pyc
 __pycache__/utils.cpython-36.pyc
 __pycache__/xgbimputer.cpython-36.pyc
+reeval_pkl.py
+AUC_chile_prot.png

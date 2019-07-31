@@ -1,6 +1,7 @@
 """MissForest Imputer for Missing Data"""
 # Author: Ashim Bhattarai
 # License: GNU General Public License v3 (GPLv3)
+# Modified by: Elias Baumann - to use lightgbm as imputation method instead
 
 import warnings
 
